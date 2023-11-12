@@ -117,7 +117,7 @@ static char *make_line(int fd, char *buffer, char *storage)
 			storage = ft_strdup("");
 
 		temp = storage; 
-		printf("temp : %s\n", temp);
+		// printf("temp : %s\n", temp);
 		storage = ft_strjoin(temp, buffer);
 		
 		free(temp);
@@ -127,11 +127,6 @@ static char *make_line(int fd, char *buffer, char *storage)
 	}
 	return (storage);
 }
-
-//             break;
-//     }
-//     return line;
-// }
 
 static char	*extract(char *line)
 {
@@ -153,42 +148,48 @@ static char	*extract(char *line)
 	return (backup);
 }
 
+char	*get_next_line(int fd)
+{
+	char buffer[BUFFER_SIZE];
+    char *line;
+	static char *storage;
+
+	line = make_line(fd, buffer, storage); // Utiliser le buffer local ici
+	if (strchr(line, '\n') || line != NULL)
+		storage = extract(line);
+	return (line);
+}
 
 int main() {
-    int fd; 
-    char buffer[BUFFER_SIZE];
+    int fd;
     char *line;
-    char *storage = NULL;
 
-    ssize_t read_bytes;
-	read_bytes = 1;
-    
-    fd = open("example.txt", O_RDONLY);
+    fd = open("example.txt", O_RDONLY); // Assurez-vous d'avoir un fichier "example.txt" avec des lignes de texte.
 
-    while (read_bytes > 0) {
-        line = make_line(fd, buffer, storage); // Utiliser le buffer local ici
-        if (strchr(line, '\n') || line != NULL) {
-            storage = extract(line);
-            printf("storage : %s\n", storage);
-            printf("line after traitement: %s\n", line);
-        }
-        free(line); // Assure-toi de libérer la mémoire allouée pour la ligne.
+    if (fd == -1) {
+        perror("Erreur lors de l'ouverture du fichier");
+        return 1;
     }
-    free(storage);
-	close (fd);
+
+    while ((line = get_next_line(fd)) != NULL) {
+        // Traitez chaque ligne ici
+        printf("Ligne lue : %s\n", line);
+        free(line); // N'oubliez pas de libérer la mémoire allouée pour la ligne.
+    }
+
+    close(fd); // Fermez le fichier
+
     return 0;
 }
 
 /* 
-
 - the first function adds the old storage to the current buffer, loops
 until it finds '\n'. OK 
-
 - the second function extract the second part of the line if it exists 
 after the '\n'.
-
 - the third function loops through the file, retreive each line;
 If the storage contains a '\n', it goes into the extract function
 to retreive the begin of the new line. 
-
+If the line is different then NULL, it goes into the extract function
+to retreive the begin of the new line (--> handeling end of file) 
 */
